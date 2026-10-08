@@ -1,0 +1,50 @@
+<!-- Plugin Configuration File: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN, cannot be changed between the plugin versions. -->
+    <id>com.ysh.tools</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
+    <name>Android code tools</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor url="https://github.com/Yang-Shuang/android-code-tools">android-code-tools</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
+    <description><![CDATA[
+        Android 应用开发者便捷工具
+        1.使用快捷键跳转到对应的xml页面或者activity、fragment文件<br>
+        匹配规则1 setContentView(R.layout. <br>
+        匹配规则2 .inflate(R.layout. <br>
+        匹配规则3 名称模糊比配，如：frangment_test_show <-->  TestShowFragment,ShowTestFragment,TestShow.....Fragment等<br>
+        匹配规则4 规范Name解析，如：MainActivity <--> activity_main<br>
+         <br>
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.compose</depends>
+
+    <depends>com.intellij.java</depends>
+    <depends>com.intellij.modules.json</depends>
+    <depends>com.intellij.modules.xml</depends>
+    <depends>org.intellij.plugins.markdown</depends>
+    <resource-bundle>messages.MyMessageBundle</resource-bundle>
+    <!-- Extensions defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- id 必须与你 Java 代码中的 GROUP_ID 常量值一模一样 -->
+        <!-- displayType 可选：BALLOON (常规气泡/Toast), STICKY_BALLOON (常驻气泡), NONE (只留日志) -->
+        <notificationGroup id="AndroidCodeTools"
+                           displayType="BALLOON"
+                           isLogByDefault="true"/>
+    </extensions>
+    <actions>
+        <action id="Tools.ActivityOpenXml" class="com.ysh.tools.openXml.ActivityOpenXmlAction" text="打开Activity/Xml"
+                description="activity,xml open">
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt I"/>
+        </action>
+    </actions>
+</idea-plugin>
