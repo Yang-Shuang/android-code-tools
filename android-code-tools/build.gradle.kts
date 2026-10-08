@@ -19,7 +19,7 @@ dependencies {
         bundledPlugin("org.intellij.plugins.markdown")
     }
 
-//    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    implementation("org.freemarker:freemarker:2.3.32")
 }
 
 intellijPlatform {

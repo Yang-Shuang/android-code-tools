@@ -46,5 +46,44 @@
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt I"/>
         </action>
+        <action id="CreateActivityFileAction"
+                class="com.ysh.tools.generate.CreateActivityAction"
+                text="Create Activity File..."
+                description="Create Activity and parse layout XML">
+            <!-- 挂载到右键菜单的 New 列表组中 -->
+            <add-to-group group-id="NewGroup" anchor="first"/>
+        </action>
+        <action id="FindViewsGenerateAction"
+                class="com.ysh.tools.generate.FindViewsGenerateAction"
+                text="findViews"
+                description="Generate findViewById code for Activity/Fragment/Dialog/Holder">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+        <action id="ClickViewsGenerateAction"
+                class="com.ysh.tools.generate.ClickViewsGenerateAction"
+                text="clickViews"
+                description="Generate onClick view branching code for Activity/Fragment/Dialog/Holder">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+        <action id="RequestCodeGenerateAction"
+                class="com.ysh.tools.generate.RequestCodeGenerateAction"
+                text="requestCode"
+                description="Generate network request code">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+
+        <action id="ResponseCodeGenerateAction"
+                class="com.ysh.tools.generate.ResponseCodeGenerateAction"
+                text="responseCode"
+                description="Generate network response code">
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+        </action>
+        <group id="ShowDefaultCodeTemplateGroup"
+               class="com.ysh.tools.generate.ShowDefaultTemplatesGroup"
+               text="Show default code template"
+               description="View built-in default code templates for reference"
+               popup="true">
+            <add-to-group group-id="HelpMenu" anchor="last"/>
+        </group>
     </actions>
 </idea-plugin>
