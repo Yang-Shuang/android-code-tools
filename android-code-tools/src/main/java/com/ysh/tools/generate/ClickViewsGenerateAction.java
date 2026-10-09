@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -108,17 +109,30 @@ public class ClickViewsGenerateAction extends AnAction {
 
     private void showLayoutChooserPopup(AnActionEvent event, Project project, Module module, Editor editor,
                                         PsiJavaFile javaFile, List<String> layouts) {
-        ListPopup popup = JBPopupFactory.getInstance().createListPopup(
-                new BaseListPopupStep<String>("Select Layout for clickViews", layouts) {
-                    @Override
-                    public PopupStep<?> onChosen(String selectedValue, boolean finalChoice) {
-                        if (selectedValue != null) {
-                            processGenerate(project, module, editor, javaFile, selectedValue);
-                        }
-                        return FINAL_CHOICE;
-                    }
+
+        BaseListPopupStep<String> step = new BaseListPopupStep<String>("Select Layout for clickViews", layouts) {
+            @Override
+            public boolean isSpeedSearchEnabled() {
+                return true; // 开启搜索框与匹配高亮
+            }
+
+            @Override
+            public String getTextFor(String value) {
+                return value;
+            }
+
+            public PopupStep<?> onChosen(String selectedValue, boolean finalChoice) {
+                if (selectedValue != null) {
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        processGenerate(project, module, editor, javaFile, selectedValue);
+                    });
                 }
-        );
+                return FINAL_CHOICE;
+            }
+        };
+
+        ListPopup popup = JBPopupFactory.getInstance().createListPopup(step);
+
         popup.showInBestPositionFor(event.getDataContext());
     }
 
@@ -148,7 +162,8 @@ public class ClickViewsGenerateAction extends AnAction {
                     break;
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
 
         if (layoutName == null) {
             String className = selectedFile.getName().replace(".java", "");
@@ -170,7 +185,8 @@ public class ClickViewsGenerateAction extends AnAction {
                     break;
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
 
         if (layoutName == null) {
             String className = selectedFile.getName().replace(".java", "");
@@ -193,7 +209,8 @@ public class ClickViewsGenerateAction extends AnAction {
                     layoutSet.add(matcher.group(1));
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         return new ArrayList<>(layoutSet);
     }
 

@@ -22,20 +22,22 @@ public class FindViewGenerator {
     }
 
     /**
-     * 核心解耦方法：传入 xml 文件与生成类型
+     * 核心解耦方法：支持自定义 viewPrefix (如 view. 或 itemView.)
      */
-    public static Result generate(VirtualFile xmlFile, GenerateType type) {
+    public static Result generate(VirtualFile xmlFile, GenerateType type, String viewPrefix) {
         XmlLayoutParser.ParseResult parseResult = XmlLayoutParser.parse(xmlFile);
 
         StringBuilder fieldsBuilder = new StringBuilder();
         StringBuilder statementsBuilder = new StringBuilder();
 
         for (XmlLayoutParser.ViewInfo view : parseResult.viewList) {
-            // 1. 生成字段: private TextView create_test_tv;
-            fieldsBuilder.append(String.format("    private %s %s;\n", view.getTypeName(), view.getFieldName()));
+            // 1. 如果不是 METHOD 局部模式，才生成类成员变量: private TextView create_test_tv;
+            if (type != GenerateType.METHOD) {
+                fieldsBuilder.append(String.format("    private %s %s;\n", view.getTypeName(), view.getFieldName()));
+            }
 
             // 2. 根据 GenerateType 差异化生成 findViewById 语句
-            String statement = type.formatFindView(view.getFieldName(), view.getIdName());
+            String statement = type.formatFindView(view.getTypeName(), view.getFieldName(), view.getIdName(), viewPrefix);
             statementsBuilder.append("        ").append(statement).append("\n");
         }
 
@@ -45,5 +47,12 @@ public class FindViewGenerator {
                 statementsBuilder.toString(),
                 parseResult.viewList
         );
+    }
+
+    /**
+     * 兼容重载方法
+     */
+    public static Result generate(VirtualFile xmlFile, GenerateType type) {
+        return generate(xmlFile, type, "view.");
     }
 }

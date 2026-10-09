@@ -3,6 +3,7 @@ package com.ysh.tools.openXml;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
@@ -170,17 +171,27 @@ public class ActivityOpenXmlAction extends AnAction {
 
     private void showLayoutChooserPopup2(AnActionEvent event, Project project, VirtualFile selectedFile, List<String> layouts) {
         // 使用 BaseListPopupStep，样式与 Generate / Refactor 弹窗完全一致
-        ListPopup popup = JBPopupFactory.getInstance().createListPopup(
-                new BaseListPopupStep<String>("Select Layout to Navigate", layouts) {
-                    @Override
-                    public PopupStep<?> onChosen(String selectedValue, boolean finalChoice) {
-                        if (selectedValue != null) {
-                            openTargetXml(project, selectedFile, selectedValue + ".xml");
-                        }
-                        return FINAL_CHOICE;
-                    }
+        BaseListPopupStep<String> step = new BaseListPopupStep<String>("Select Layout to Navigate", layouts) {
+            @Override
+            public boolean isSpeedSearchEnabled() {
+                return true; // 开启搜索框与匹配高亮
+            }
+
+            @Override
+            public String getTextFor(String value) {
+                return value;
+            }
+
+            public PopupStep<?> onChosen(String selectedValue, boolean finalChoice) {
+                if (selectedValue != null) {
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        openTargetXml(project, selectedFile, selectedValue + ".xml");
+                    });
                 }
-        );
+                return FINAL_CHOICE;
+            }
+        };
+        ListPopup popup = JBPopupFactory.getInstance().createListPopup(step);
 
         popup.showInBestPositionFor(event.getDataContext());
     }

@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -30,6 +31,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FindViewsGenerateAction extends AnAction {
+
+    public static class MethodLayoutResult {
+        public String layoutName;
+        public String viewPrefix;
+        public PsiMethod psiMethod;
+
+        public MethodLayoutResult(String layoutName, String viewPrefix, PsiMethod psiMethod) {
+            this.layoutName = layoutName;
+            this.viewPrefix = viewPrefix;
+            this.psiMethod = psiMethod;
+        }
+    }
 
     @Override
     public void update(@NotNull AnActionEvent e) {
@@ -58,15 +71,30 @@ public class FindViewsGenerateAction extends AnAction {
         if (selectedFile == null) return;
 
         PsiJavaFile javaFile = (PsiJavaFile) psiFile;
-        PsiClass targetClass = PsiTreeUtil.findChildOfType(javaFile, PsiClass.class);
+
+        // 1. 精准获取当前光标所在的 PsiClass（支持外部类、ViewHolder 内部类等）
+        PsiClass targetClass = getTargetClass(psiFile, editor);
         if (targetClass == null) return;
 
-        // 1. 根据文件名/继承关系确定 GenerateType
-        GenerateType generateType = detectGenerateType(targetClass, selectedFile.getName());
-
-        // 2. 根据文件匹配规则，寻找布局文件名
         Module module = ModuleUtilCore.findModuleForPsiElement(targetClass);
-        List<String> targetLayouts = findLayoutNamesForFile(selectedFile);
+
+        // 2. 最高优先级：检查光标所在的方法内部是否有 R.layout.xxx 引用
+        MethodLayoutResult methodLayout = detectMethodLayout(psiFile, editor);
+
+        GenerateType generateType;
+        List<String> targetLayouts = new ArrayList<>();
+        String viewPrefix = "view.";
+
+        if (methodLayout != null) {
+            // 匹配到方法内部布局，直接切换为最高优先级的 METHOD 局部模式
+            generateType = GenerateType.METHOD;
+            targetLayouts.add(methodLayout.layoutName);
+            viewPrefix = methodLayout.viewPrefix;
+        } else {
+            // 常规判定逻辑
+            generateType = detectGenerateType(targetClass, selectedFile.getName());
+            targetLayouts = findLayoutNamesForFile(selectedFile);
+        }
 
         if (targetLayouts.isEmpty()) {
             // 如果代码中未找到 R.layout 引用，展示全模块所有 layout 列表供用户选择
@@ -75,24 +103,21 @@ public class FindViewsGenerateAction extends AnAction {
                 Messages.showWarningDialog(project, "No layout XML files found in module!", "Warning");
                 return;
             }
-            showLayoutChooserPopup(e, project, module, targetClass, editor, javaFile, generateType, allLayouts);
+            showLayoutChooserPopup(e, project, module, targetClass, editor, javaFile, generateType, viewPrefix, allLayouts);
         } else if (targetLayouts.size() == 1) {
             // 只有 1 个布局文件，直接执行生成
-            processGenerate(project, module, targetClass, editor, javaFile, generateType, targetLayouts.get(0));
+            processGenerate(project, module, targetClass, editor, javaFile, generateType, viewPrefix, targetLayouts.get(0));
         } else {
             // 有多个布局文件引用，弹出列表让用户选择
-            showLayoutChooserPopup(e, project, module, targetClass, editor, javaFile, generateType, targetLayouts);
+            showLayoutChooserPopup(e, project, module, targetClass, editor, javaFile, generateType, viewPrefix, targetLayouts);
         }
     }
 
     /**
      * 核心生成逻辑：解析 XML 并插入代码到当前编辑器
      */
-    /**
-     * 核心生成逻辑：解析 XML 并插入代码到当前编辑器
-     */
     private void processGenerate(Project project, Module module, PsiClass targetClass, Editor editor,
-                                 PsiJavaFile javaFile, GenerateType generateType, String layoutName) {
+                                 PsiJavaFile javaFile, GenerateType generateType, String viewPrefix, String layoutName) {
         VirtualFile layoutXmlFile = findLayoutVirtualFile(project, module, layoutName + ".xml");
         if (layoutXmlFile == null) {
             Messages.showErrorDialog(project, "Layout XML file not found: " + layoutName + ".xml", "Error");
@@ -100,17 +125,19 @@ public class FindViewsGenerateAction extends AnAction {
         }
 
         // 调用生成器获取代码片段
-        FindViewGenerator.Result result = FindViewGenerator.generate(layoutXmlFile, generateType);
+        FindViewGenerator.Result result = FindViewGenerator.generate(layoutXmlFile, generateType, viewPrefix);
 
         WriteCommandAction.runWriteCommandAction(project, () -> {
             PsiElementFactory elementFactory = JavaPsiFacade.getElementFactory(project);
 
-            // 1. 补全 View 成员变量声明（PSI 操作）
-            for (XmlLayoutParser.ViewInfo view : result.viewList) {
-                if (targetClass.findFieldByName(view.getFieldName(), false) == null) {
-                    String fieldText = String.format("private %s %s;", view.getTypeName(), view.getFieldName());
-                    PsiField field = elementFactory.createFieldFromText(fieldText, targetClass);
-                    targetClass.add(field);
+            // 1. 补全 View 成员变量声明（METHOD 模式自动跳过补全全局变量）
+            if (generateType != GenerateType.METHOD) {
+                for (XmlLayoutParser.ViewInfo view : result.viewList) {
+                    if (targetClass.findFieldByName(view.getFieldName(), false) == null) {
+                        String fieldText = String.format("private %s %s;", view.getTypeName(), view.getFieldName());
+                        PsiField field = elementFactory.createFieldFromText(fieldText, targetClass);
+                        targetClass.add(field);
+                    }
                 }
             }
 
@@ -122,7 +149,7 @@ public class FindViewsGenerateAction extends AnAction {
                 }
             }
 
-            // 【核心修复】：提交挂起的 PSI 操作并解锁 Document，防止与后续的 Document 修改冲突
+            // 提交挂起的 PSI 操作并解锁 Document
             PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
             psiDocumentManager.doPostponedOperationsAndUnblockDocument(editor.getDocument());
 
@@ -136,22 +163,126 @@ public class FindViewsGenerateAction extends AnAction {
     }
 
     /**
+     * 检测光标是否在方法体内部，并解析是否存在 R.layout.xxx
+     */
+    private MethodLayoutResult detectMethodLayout(PsiFile psiFile, Editor editor) {
+        int offset = editor.getCaretModel().getOffset();
+        PsiElement element = psiFile.findElementAt(offset);
+        if (element == null) return null;
+
+        PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class);
+        if (method == null || method.getBody() == null) return null;
+
+        Collection<PsiReferenceExpression> references = PsiTreeUtil.collectElementsOfType(
+                method.getBody(), PsiReferenceExpression.class);
+
+        for (PsiReferenceExpression ref : references) {
+            String text = ref.getText();
+            if (text.startsWith("R.layout.")) {
+                String layoutName = text.substring("R.layout.".length());
+                String viewPrefix = inferViewPrefix(ref, method);
+                return new MethodLayoutResult(layoutName, viewPrefix, method);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 自动推断方法内部 view 的前缀 (例如 view. / itemView. / "")
+     */
+    private String inferViewPrefix(PsiReferenceExpression rLayoutRef, PsiMethod method) {
+        // 查找 inflate 赋值变量声明: View view = inflater.inflate(...)
+        PsiDeclarationStatement declStmt = PsiTreeUtil.getParentOfType(rLayoutRef, PsiDeclarationStatement.class);
+        if (declStmt != null && declStmt.getDeclaredElements().length > 0) {
+            PsiElement declared = declStmt.getDeclaredElements()[0];
+            if (declared instanceof PsiVariable) {
+                String varName = ((PsiVariable) declared).getName();
+                if (varName != null && !varName.isEmpty()) {
+                    return varName + ".";
+                }
+            }
+        }
+
+        // 查找方法形参中的 View 对象名
+        for (PsiParameter parameter : method.getParameterList().getParameters()) {
+            if (parameter.getType().getPresentableText().contains("View")) {
+                return parameter.getName() + ".";
+            }
+        }
+
+        return "view.";
+    }
+
+    /**
+     * 获取当前光标所在的 PsiClass（精准支持外部类、静态/非静态内部类、ViewHolder 等）
+     */
+    public static PsiClass getTargetClass(PsiFile psiFile, Editor editor) {
+        if (psiFile == null) return null;
+
+        if (editor != null) {
+            int offset = editor.getCaretModel().getOffset();
+            PsiElement element = psiFile.findElementAt(offset);
+            if (element != null) {
+                PsiClass targetClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
+                if (targetClass != null) {
+                    return targetClass;
+                }
+            }
+        }
+
+        if (psiFile instanceof PsiJavaFile) {
+            PsiJavaFile javaFile = (PsiJavaFile) psiFile;
+            PsiClass[] classes = javaFile.getClasses();
+            if (classes.length > 0) {
+                return classes[0];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 弹出 IDE 风格列表供用户选择 Layout
      */
     private void showLayoutChooserPopup(AnActionEvent event, Project project, Module module, PsiClass targetClass,
-                                        Editor editor, PsiJavaFile javaFile, GenerateType generateType, List<String> layouts) {
-        ListPopup popup = JBPopupFactory.getInstance().createListPopup(
-                new BaseListPopupStep<String>("Select Layout for findViews", layouts) {
-                    @Override
-                    public PopupStep<?> onChosen(String selectedValue, boolean finalChoice) {
-                        if (selectedValue != null) {
-                            processGenerate(project, module, targetClass, editor, javaFile, generateType, selectedValue);
-                        }
-                        return FINAL_CHOICE;
-                    }
+                                        Editor editor, PsiJavaFile javaFile, GenerateType generateType,
+                                        String viewPrefix, List<String> layouts) {
+
+        BaseListPopupStep<String> step = new BaseListPopupStep<String>("Select Layout XML", layouts) {
+
+            // ==================== 问题 2：开启 SpeedSearch 即打即搜 ====================
+            @Override
+            public boolean isSpeedSearchEnabled() {
+                return true; // 开启搜索框与匹配高亮
+            }
+
+            @Override
+            public String getTextFor(String value) {
+                return value; // 指定搜索时匹配的字符串（这里即布局名称，如 activity_main）
+            }
+
+            // ==================== 问题 1：修复鼠标点击报错/失效 ====================
+            @Override
+            public PopupStep<?> onChosen(String selectedValue, boolean finalChoice) {
+                if (finalChoice && selectedValue != null) {
+                    // 延迟到 EDT 下一个循环队列，等待 Popup 窗口彻底销毁后再修改代码
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        processGenerate(project, module, targetClass, editor, javaFile, generateType, viewPrefix, selectedValue);
+                    });
                 }
-        );
-        popup.showInBestPositionFor(event.getDataContext());
+                return FINAL_CHOICE;
+            }
+        };
+
+        // 创建并展示 Popup 弹窗
+        ListPopup popup = JBPopupFactory.getInstance().createListPopup(step);
+
+        // 优先展示在编辑器光标附近，体验与 Alt+Insert 一致
+        if (editor != null) {
+            popup.showInBestPositionFor(editor);
+        } else {
+            popup.showCenteredInCurrentWindow(project);
+        }
     }
 
     /**
@@ -188,7 +319,8 @@ public class FindViewsGenerateAction extends AnAction {
                     break;
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
 
         // 如果代码里没写，按大写字母分割 CamelCase -> 下划线 拼出 activity_xxx
         if (layoutName == null) {
@@ -214,7 +346,8 @@ public class FindViewsGenerateAction extends AnAction {
                     break;
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
 
         if (layoutName == null) {
             String className = selectedFile.getName().replace(".java", "");
@@ -240,7 +373,8 @@ public class FindViewsGenerateAction extends AnAction {
                     layoutSet.add(matcher.group(1));
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         return new ArrayList<>(layoutSet);
     }
 
