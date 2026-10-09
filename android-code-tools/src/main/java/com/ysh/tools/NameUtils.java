@@ -67,6 +67,37 @@ public class NameUtils {
     }
 
     /**
+     * 将 layout 文件名转换为 Dialog 类名
+     * 规则：dialog_create_test.xml -> CreateTestDialog
+     */
+    public static String layoutToDialogName(String layoutFileName) {
+        if (StringUtil.isEmpty(layoutFileName)) {
+            return "";
+        }
+
+        // 1. 去除 .xml 后缀
+        String name = layoutFileName.replace(".xml", "");
+
+        // 2. 去除 fragment_ 前缀（如果有）
+        if (name.startsWith("dialog_")) {
+            name = name.substring("dialog_".length());
+        }
+
+        // 3. 按下划线分割并转为大驼峰 (create_test -> CreateTest)
+        StringBuilder camelName = new StringBuilder();
+        String[] parts = name.split("_");
+        for (String part : parts) {
+            if (!part.isEmpty()) {
+                camelName.append(StringUtil.capitalize(part.toLowerCase()));
+            }
+        }
+
+        // 4. 拼接 Dialog 后缀
+        camelName.append("Dialog");
+        return camelName.toString();
+    }
+
+    /**
      * 将 layout 文件名转换为 Holder 类名
      * 规则：item_create_test.xml -> CreateTestItemHolder
      */

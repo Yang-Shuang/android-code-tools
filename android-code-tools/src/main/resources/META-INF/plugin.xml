@@ -60,12 +60,19 @@
             <!-- 挂载到右键菜单的 New 列表组中 -->
             <add-to-group group-id="NewGroup" anchor="after" relative-to-action="CreateActivityFileAction"/>
         </action>
+        <action id="CreateDialogFileAction"
+                class="com.ysh.tools.generate.CreateDialogAction"
+                text="Create Dialog File..."
+                description="Create Dialog and parse layout XML">
+            <!-- 挂载到右键菜单的 New 列表组中 -->
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="CreateFragmentFileAction"/>
+        </action>
         <action id="CreateAdapterFileAction"
                 class="com.ysh.tools.generate.CreateAdapterAction"
                 text="Create Adapter File..."
                 description="Create Adapter with bean">
             <!-- 挂载到右键菜单的 New 列表组中 -->
-            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="CreateFragmentFileAction"/>
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="CreateDialogFileAction"/>
         </action>
         <action id="CreateHolderFileAction"
                 class="com.ysh.tools.generate.CreateHolderAction"
