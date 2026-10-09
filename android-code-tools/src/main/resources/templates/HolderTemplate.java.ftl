@@ -13,25 +13,16 @@ import ${importClass};
  * @Description ${holderName}
  */
 </#if>
-<#if isInnerClass>public static class ${holderName}<#else>public class ${holderName}</#if> extends BaseRecycleViewHolder {
+<#if isInnerClass>public class ${holderName}<#else>public class ${holderName}</#if> extends BaseRecycleViewHolder {
 
-<#if viewList??>
-<#list viewList as view>
-    private ${view.typeName} ${view.fieldName};
-</#list>
-</#if>
-
+${fieldsCode!}
     public ${holderName}(View itemView) {
         super(itemView);
         initViews();
     }
 
     private void initViews() {
-<#if viewList??>
-<#list viewList as view>
-        this.${view.fieldName} = itemView.findViewById(R.id.${view.idName});
-</#list>
-</#if>
+${initViewsCode!}
     }
 
     @Override

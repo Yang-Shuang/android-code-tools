@@ -67,6 +67,20 @@
             <!-- 挂载到右键菜单的 New 列表组中 -->
             <add-to-group group-id="NewGroup" anchor="after" relative-to-action="CreateFragmentFileAction"/>
         </action>
+        <action id="CreateHolderFileAction"
+                class="com.ysh.tools.generate.CreateHolderAction"
+                text="Create Holder File..."
+                description="Create Holder with layout XML">
+            <!-- 挂载到右键菜单的 New 列表组中 -->
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="CreateAdapterFileAction"/>
+        </action>
+        <action id="CreateHolderClassAction"
+                class="com.ysh.tools.generate.CreateHolderClassAction"
+                text="Create Holder Class..."
+                description="Create Holder with layout XML">
+            <!-- 挂载到右键菜单的 New 列表组中 -->
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="Tools.ActivityOpenXml"/>
+        </action>
         <action id="FindViewsGenerateAction"
                 class="com.ysh.tools.generate.FindViewsGenerateAction"
                 text="findViews"

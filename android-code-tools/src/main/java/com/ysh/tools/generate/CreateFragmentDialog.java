@@ -4,6 +4,7 @@ package com.ysh.tools.generate;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.ComboboxSpeedSearch;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
@@ -30,6 +31,8 @@ public class CreateFragmentDialog extends DialogWrapper {
         // 2. 初始化控件
         layoutComboBox = new ComboBox<>(layoutFiles.toArray(new String[0]));
         fragmentNameField = new JBTextField();
+
+        ComboboxSpeedSearch.installSpeedSearch(layoutComboBox, item -> item);
 
         Dimension cbSize = layoutComboBox.getPreferredSize();
         layoutComboBox.setPreferredSize(new Dimension(JBUI.scale(550), cbSize.height));

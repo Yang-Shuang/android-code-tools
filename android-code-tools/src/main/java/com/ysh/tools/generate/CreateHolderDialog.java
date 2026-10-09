@@ -17,46 +17,46 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.util.List;
 
-public class CreateActivityDialog extends DialogWrapper {
+public class CreateHolderDialog extends DialogWrapper {
 
     private final ComboBox<String> layoutComboBox;
-    private final JBTextField activityNameField;
+    private final JBTextField holderNameField;
 
-    public CreateActivityDialog(@Nullable Project project, List<String> layoutFiles) {
+    public CreateHolderDialog(@Nullable Project project, List<String> layoutFiles) {
         super(project);
 
         // 1. 设置弹窗标题
-        setTitle("Create an Activity with Layout File...");
+        setTitle("Create an Holder with Layout File...");
 
         // 2. 初始化控件
         layoutComboBox = new ComboBox<>(layoutFiles.toArray(new String[0]));
-        activityNameField = new JBTextField();
+        holderNameField = new JBTextField();
 
         ComboboxSpeedSearch.installSpeedSearch(layoutComboBox, item -> item);
 
         Dimension cbSize = layoutComboBox.getPreferredSize();
         layoutComboBox.setPreferredSize(new Dimension(JBUI.scale(550), cbSize.height));
 
-        // 3. 监听下拉框选择事件：选中 layout 后自动填充 Activity 名称
+        // 3. 监听下拉框选择事件：选中 layout 后自动填充 Holder 名称
         layoutComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 String selectedLayout = (String) e.getItem();
-                updateActivityName(selectedLayout);
+                updateHolderName(selectedLayout);
             }
         });
 
         // 4. 默认触发一次第一个选项的名称转换
         if (!layoutFiles.isEmpty()) {
-            updateActivityName(layoutFiles.get(0));
+            updateHolderName(layoutFiles.get(0));
         }
 
         // 5. 初始化对话框
         init();
     }
 
-    private void updateActivityName(String layoutFileName) {
-        String defaultActivityName = NameUtils.layoutToActivityName(layoutFileName);
-        activityNameField.setText(defaultActivityName);
+    private void updateHolderName(String layoutFileName) {
+        String defaultHolderName = NameUtils.layoutToHolderName(layoutFileName);
+        holderNameField.setText(defaultHolderName);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CreateActivityDialog extends DialogWrapper {
         // 1. 使用 FormBuilder 构建表单
         JPanel panel = FormBuilder.createFormBuilder()
                 .addLabeledComponent(new JBLabel("Select Layout:"), layoutComboBox, 1, false)
-                .addLabeledComponent(new JBLabel("Activity Name:"), activityNameField, 1, false)
+                .addLabeledComponent(new JBLabel("Holder Name:"), holderNameField, 1, false)
                 .getPanel();
 
         // 2. 设置固定的首选宽度（这里设为 480px，可根据偏好微调为 500 或 550）
@@ -82,7 +82,7 @@ public class CreateActivityDialog extends DialogWrapper {
         return selected != null ? selected.replace(".xml", "") : "";
     }
 
-    public String getActivityName() {
-        return activityNameField.getText().trim();
+    public String getHolderName() {
+        return holderNameField.getText().trim();
     }
 }

@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.psi.PsiClass;
+import com.intellij.ui.ComboboxSpeedSearch;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
@@ -57,6 +58,11 @@ public class CreateAdapterDialog extends DialogWrapper {
                 BeanItem selectedItem = (BeanItem) e.getItem();
                 updateAdapterName(selectedItem);
             }
+        });
+
+        // 自定义匹配的文本提取规则（如根据类名匹配）
+        ComboboxSpeedSearch.installSpeedSearch(beanComboBox, beanItem -> {
+            return beanItem != null ? beanItem.psiClass.getName() : "";
         });
 
         // 3. 设置 UI 尺寸并初始化对话框
