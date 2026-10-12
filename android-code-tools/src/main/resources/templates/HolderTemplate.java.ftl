@@ -1,5 +1,6 @@
 <#if !isInnerClass>
 package ${packageName};
+</#if>
 
 <#if importList??>
 <#list importList as importClass>
@@ -7,12 +8,15 @@ import ${importClass};
 </#list>
 </#if>
 
+import com.huimai365.R;
+import com.huimai365.compere.bean.ItemBaseBean;
+import com.huimai365.goods.adapter.holder.BaseRecycleViewHolder;
+
 /**
  * @author ${author!"unknown"}
- * @date ${date}
- * @Description ${holderName}
+ * @date ${date!"unknown"}
+ * @Description ${holderName!"unknown"}
  */
-</#if>
 <#if isInnerClass>public class ${holderName}<#else>public class ${holderName}</#if> extends BaseRecycleViewHolder {
 
 ${fieldsCode!}

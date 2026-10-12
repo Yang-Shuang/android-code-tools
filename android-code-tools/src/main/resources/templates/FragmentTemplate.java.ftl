@@ -7,6 +7,10 @@ import ${importClass};
 </#list>
 </#if>
 
+import com.huimai365.R;
+import com.huimai365.base.fragment.BaseFragment;
+import com.huimai365.compere.bean.MessageBean;
+
 /**
  * @author ${author!"unknown"}
  * @date ${date}

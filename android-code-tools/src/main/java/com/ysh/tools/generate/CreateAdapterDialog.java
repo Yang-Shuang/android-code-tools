@@ -122,7 +122,7 @@ public class CreateAdapterDialog extends DialogWrapper {
     }
 
     /**
-     * 获取选中的 Bean 完整类名（例如: com.huimai365.compere.bean.ItemBaseBean）
+     * 获取选中的 Bean 完整类名（例如: com.xxx.xxx.bean.XxxBean）
      */
     public String getSelectedBeanQualifiedName() {
         PsiClass psiClass = getSelectedBean();
@@ -154,7 +154,7 @@ public class CreateAdapterDialog extends DialogWrapper {
         public String toString() {
             if (psiClass == null) return "";
             String packageName = getPackageName(psiClass);
-            // 格式例: ItemBaseBean (com.huimai365.compere.bean)
+            // 格式例: ItemBaseBean (com.xxx.xxx.bean)
             return psiClass.getName() + (packageName.isEmpty() ? "" : " (" + packageName + ")");
         }
 

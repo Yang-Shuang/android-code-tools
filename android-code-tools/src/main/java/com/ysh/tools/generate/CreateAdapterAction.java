@@ -50,7 +50,7 @@ public class CreateAdapterAction extends AnAction {
             // 用户点击了 OK
             String adapterName = dialog.getAdapterName();
             String beanName = dialog.getSelectedBeanName(); // 例如: ItemBaseBean
-            String beanQualifiedName = dialog.getSelectedBeanQualifiedName(); // 例如: com.huimai365.compere.bean.ItemBaseBean
+            String beanQualifiedName = dialog.getSelectedBeanQualifiedName(); // 例如: com.xxx.xxx.bean.XxxBean
 
             LogUtils.log("Package: " + packageName);
             LogUtils.log("Adapter: " + adapterName);

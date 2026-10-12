@@ -7,6 +7,11 @@ import ${importClass};
 </#list>
 </#if>
 
+import com.huimai365.R;
+import com.huimai365.base.activity.BaseActivity;
+import com.huimai365.compere.bean.MessageBean;
+import com.huimai365.util.DensityUtil;
+
 /**
  * @author ${author!"unknown"}
  * @date ${date}
@@ -47,7 +52,7 @@ ${fieldsCode}
     @Override
     public void onClick(View v) {
 <#if clickViewsCode?? && clickViewsCode?has_content>
-${clickViewsCode}<#t>
+${clickViewsCode}
 <#else>
         // TODO onClick
 </#if>
@@ -62,7 +67,7 @@ ${clickViewsCode}<#t>
 <#-- 4. 注入生成的 initViews() 方法（含 findViewById） -->
     private void initViews() {
 <#if initViewsCode?? && initViewsCode?has_content>
-${initViewsCode}<#t>
+${initViewsCode}
 <#else>
         // findView
 </#if>

@@ -98,10 +98,7 @@ public class CreateActivityAction extends AnAction {
             importList.add("android.os.Bundle");
             importList.add("android.view.View");
             importList.add("android.view.Window");
-            importList.add("com.huimai365.R");
-            importList.add("com.huimai365.base.activity.BaseActivity");
-            importList.add("com.huimai365.compere.bean.MessageBean");
-            importList.add("com.huimai365.util.DensityUtil");
+
             importList.addAll(gResult.importList); // 加入 XML 中控件的 Package
             dataModel.put("importList", importList);
 

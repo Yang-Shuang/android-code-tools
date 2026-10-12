@@ -84,9 +84,6 @@ public class CreateHolderAction extends AnAction {
             // 组装 Import 集合（TreeSet 自动去重和按字母排序）
             Set<String> importList = new TreeSet<>();
             importList.add("android.view.View");
-            importList.add("com.huimai365.R"); // 基础 R 文件路径
-            importList.add("com.huimai365.compere.bean.ItemBaseBean");
-            importList.add("com.huimai365.goods.adapter.holder.BaseRecycleViewHolder");
 
             if (gResult.importList != null) {
                 importList.addAll(gResult.importList); // 加入 XML 中控件的 Package

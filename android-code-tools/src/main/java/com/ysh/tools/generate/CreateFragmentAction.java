@@ -101,9 +101,7 @@ public class CreateFragmentAction extends AnAction {
             importList.add("android.view.ViewGroup");
             importList.add("androidx.annotation.NonNull");
             importList.add("androidx.annotation.Nullable");
-            importList.add("com.huimai365.R");
-            importList.add("com.huimai365.base.fragment.BaseFragment");
-            importList.add("com.huimai365.compere.bean.MessageBean");
+
             importList.addAll(gResult.importList); // 加入 XML 中控件的 Package
             dataModel.put("importList", importList);
 
